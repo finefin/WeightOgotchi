@@ -436,6 +436,13 @@ function drawChart(canvas) {
     if (v < minW) minW = v;
     if (v > maxW) maxW = v;
   });
+  if (state.profile?.heightCm) {
+    const h = state.profile.heightCm / 100;
+    const bmiLow = 18.5 * h * h;
+    const bmiHigh = 25 * h * h;
+    if (bmiLow < minW) minW = bmiLow;
+    if (bmiHigh > maxW) maxW = bmiHigh;
+  }
   minW = Math.floor(minW - 1);
   maxW = Math.ceil(maxW + 1);
   const wRange = maxW - minW || 1;
@@ -497,8 +504,20 @@ function drawChart(canvas) {
     ctx.fillText(label, W - pad.right + 4, y + 4);
   }
 
+  if (state.profile?.heightCm) {
+    const h = state.profile.heightCm / 100;
+    const lowW = 18.5 * h * h;
+    const highW = 25 * h * h;
+    const yLow = yPos(lowW, minW, wRange, pad, plotH);
+    const yHigh = yPos(highW, minW, wRange, pad, plotH);
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.08)';
+    ctx.fillRect(pad.left, yHigh, plotW, yLow - yHigh);
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
+    ctx.font = '10px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText('Normal BMI', pad.left + 4, yHigh - 4);
+  }
   if (target) drawRefLine('Target', target, '#22c55e', false);
-  if (ideal) drawRefLine('Ideal', ideal, '#22c55e', true);
 
   // ----- data line -----
   if (data.length < 2) {
@@ -763,5 +782,16 @@ if (!state.profile || state.weights.length === 0) {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    function checkUpdate() { reg.update(); }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+    setInterval(checkUpdate, 60 * 60 * 1000);
+  });
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
 }

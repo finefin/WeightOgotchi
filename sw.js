@@ -1,4 +1,4 @@
-const CACHE = 'weightogotchi-v1';
+const CACHE = 'weightogotchi-v3';
 
 const PRECACHE_URLS = [
   '.',
@@ -25,8 +25,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(event.request).then((cached) => {
+      if (cached) {
+        fetch(event.request).then((response) => {
+          if (response.ok) caches.open(CACHE).then((cache) => cache.put(event.request, response));
+        }).catch(() => {});
+        return cached;
+      }
+      return fetch(event.request).then((response) => {
+        if (response.ok) caches.open(CACHE).then((cache) => cache.put(event.request, response.clone()));
+        return response;
+      }).catch(() => caches.match(event.request));
+    })
   );
 });
