@@ -13,6 +13,24 @@ const el = (tag, attrs = {}, ...children) => {
   return e;
 };
 
+// ---------- BMI ----------
+const BMI_CATEGORIES = [
+  { min: 0, max: 18.5, label: 'Underweight', color: '#60a5fa' },
+  { min: 18.5, max: 25, label: 'Normal', color: '#22c55e' },
+  { min: 25, max: 30, label: 'Overweight', color: '#f59e0b' },
+  { min: 30, max: Infinity, label: 'Obese', color: '#ef4444' },
+];
+
+function calcBMI(weightKg, heightCm) {
+  if (!weightKg || !heightCm) return null;
+  return weightKg / ((heightCm / 100) ** 2);
+}
+
+function bmiCategory(bmi) {
+  if (bmi == null) return null;
+  return BMI_CATEGORIES.find(c => bmi >= c.min && bmi < c.max) || BMI_CATEGORIES[BMI_CATEGORIES.length - 1];
+}
+
 // ---------- messages ----------
 const MESSAGES = {
   welcome: [
@@ -311,6 +329,72 @@ function showEditDialog(entry, idx) {
   setTimeout(() => input.focus(), 100);
 }
 
+// ---------- BMI info dialog ----------
+function showBMIDialog() {
+  const p = state.profile;
+  const lastW = state.weights[state.weights.length - 1]?.weight;
+  const bmi = calcBMI(lastW, p?.heightCm);
+  const cat = bmiCategory(bmi);
+
+  const overlay = el('div', { class: 'overlay' });
+
+  const rows = BMI_CATEGORIES.map(c => {
+    const active = cat && c.label === cat.label;
+    return el('tr', { style: active ? { background: c.color + '22', fontWeight: '700' } : {} },
+      el('td', { style: { padding: '0.3rem 0.5rem', color: active ? c.color : 'var(--text)' } },
+        el('span', { style: { display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: c.color, marginRight: 6, verticalAlign: 'middle' } }),
+        c.label,
+      ),
+      el('td', { style: { padding: '0.3rem 0.5rem', color: 'var(--muted)' } },
+        c.max === Infinity ? `${c.min}+` : `${c.min} – ${c.max}`,
+      ),
+    );
+  });
+
+  const dialog = el('div', { class: 'dialog', style: { maxWidth: 320 } },
+    el('h2', {}, 'BMI Info'),
+    bmi != null && cat
+      ? el('p', { style: { textAlign: 'center', fontSize: '2rem', fontWeight: '700', color: cat.color, margin: '0.25rem 0' } },
+          `${bmi.toFixed(1)}`,
+          el('span', { style: { fontSize: '0.9rem', fontWeight: '400', display: 'block', color: 'var(--muted)' } }, cat.label),
+        )
+      : el('p', { style: { textAlign: 'center', color: 'var(--muted)' } }, 'Log a weight to see your BMI.'),
+    el('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' } },
+      el('thead', {},
+        el('tr', {},
+          el('th', { style: { textAlign: 'left', padding: '0.3rem 0.5rem', color: 'var(--muted)', borderBottom: '1px solid var(--border)' } }, 'Category'),
+          el('th', { style: { textAlign: 'left', padding: '0.3rem 0.5rem', color: 'var(--muted)', borderBottom: '1px solid var(--border)' } }, 'Range (kg/m²)'),
+        ),
+      ),
+      el('tbody', {}, ...rows),
+    ),
+    el('div', { class: 'dialog-actions', style: { marginTop: '0.5rem' } },
+      el('button', { class: 'btn', onclick: () => overlay.remove() }, 'Got it'),
+    ),
+  );
+  overlay.append(dialog);
+  document.body.append(overlay);
+}
+
+// ---------- chart dialog ----------
+function showChartDialog() {
+  if (state.weights.length === 0) return;
+  const overlay = el('div', { class: 'overlay', style: { alignItems: 'flex-end', padding: 0 }, onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
+  const canvas = el('canvas', {
+    class: 'chart',
+    style: { width: '100%', height: '300px', display: 'block', borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem' },
+  });
+  const sheet = el('div', { style: { background: 'var(--surface)', width: '100%', maxWidth: 480, borderTopLeftRadius: '1rem', borderTopRightRadius: '1rem', overflow: 'hidden' } },
+    canvas,
+    el('div', { style: { textAlign: 'center', padding: '0.75rem 1rem' } },
+      el('button', { class: 'btn', style: { width: '100%' }, onclick: () => overlay.remove() }, 'Close'),
+    ),
+  );
+  overlay.append(sheet);
+  document.body.append(overlay);
+  requestAnimationFrame(() => drawChart(canvas));
+}
+
 // ---------- chart ----------
 function yPos(val, minW, wRange, pad, plotH) {
   return pad.top + plotH - ((val - minW) / wRange) * plotH;
@@ -326,7 +410,7 @@ function drawChart(canvas) {
 
   const W = rect.width;
   const H = rect.height;
-  const pad = { top: 20, right: 20, bottom: 40, left: 50 };
+  const pad = { top: 16, right: 56, bottom: 36, left: 44 };
   const plotW = W - pad.left - pad.right;
   const plotH = H - pad.top - pad.bottom;
 
@@ -392,26 +476,6 @@ function drawChart(canvas) {
     ctx.fillText(data[idx].date.slice(5), x, H - pad.bottom + 16);
   }
 
-  // ----- progress step lines -----
-  if (prog) {
-    prog.steps.forEach((val, i) => {
-      const y = yPos(val, minW, wRange, pad, plotH);
-      if (y < pad.top || y > pad.top + plotH) return;
-      const passed = i < prog.completed;
-      ctx.beginPath();
-      ctx.strokeStyle = passed ? '#3b82f6' : '#334155';
-      ctx.lineWidth = passed ? 1.5 : 1;
-      ctx.setLineDash([]);
-      ctx.moveTo(pad.left, y);
-      ctx.lineTo(W - pad.right, y);
-      ctx.stroke();
-      ctx.fillStyle = passed ? '#3b82f6' : '#64748b';
-      ctx.font = '10px system-ui';
-      ctx.textAlign = 'left';
-      ctx.fillText(`${i + 1}/10`, W - pad.right + 4, y + 3);
-    });
-  }
-
   // ----- reference lines -----
   function drawRefLine(label, val, color, dashed) {
     const y = yPos(val, minW, wRange, pad, plotH);
@@ -438,7 +502,6 @@ function drawChart(canvas) {
 
   // ----- data line -----
   if (data.length < 2) {
-    // draw single dot
     const d = data[0];
     const x = pad.left + plotW / 2;
     const y = yPos(d.weight, minW, wRange, pad, plotH);
@@ -456,40 +519,68 @@ function drawChart(canvas) {
   const pts = data.map((d, i) => ({
     x: pad.left + (plotW * i) / (data.length - 1),
     y: yPos(d.weight, minW, wRange, pad, plotH),
+    weight: d.weight,
   }));
 
-  ctx.beginPath();
-  ctx.strokeStyle = '#4f46e5';
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    ctx.lineTo(pts[i].x, pts[i].y);
-  }
-  ctx.stroke();
+  const hasTarget = target != null;
+  const first = data[0].weight;
+  const losing = hasTarget && target < first;
 
-  pts.forEach(p => {
+  ctx.lineWidth = 3.5;
+  ctx.lineJoin = 'round';
+  for (let i = 1; i < pts.length; i++) {
+    const diff = pts[i].weight - pts[i - 1].weight;
+    const towardTarget = hasTarget ? (losing ? diff < 0 : diff > 0) : null;
+    ctx.beginPath();
+    ctx.strokeStyle = towardTarget === null ? '#4f46e5' : towardTarget ? '#22c55e' : '#ef4444';
+    ctx.moveTo(pts[i - 1].x, pts[i - 1].y);
+    ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+  }
+
+  pts.forEach((p, i) => {
+    const color = !hasTarget || i === 0 ? '#4f46e5' : (() => {
+      const diff = p.weight - pts[i - 1].weight;
+      return (losing ? diff < 0 : diff > 0) ? '#22c55e' : '#ef4444';
+    })();
     ctx.beginPath();
     ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#4f46e5';
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.beginPath();
     ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
     ctx.fillStyle = '#fff';
     ctx.fill();
   });
-
-  // axis labels
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '11px system-ui';
-  ctx.textAlign = 'center';
-  ctx.fillText('Date', W / 2, H - 2);
-  ctx.save();
-  ctx.translate(12, H / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText('Weight (kg)', 0, 0);
-  ctx.restore();
 }
+
+// ---------- export / import ----------
+function exportData() {
+  const data = { profile: state.profile, weights: state.weights };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'weightogotchi.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (data.profile) state.profile = data.profile;
+      if (Array.isArray(data.weights)) state.weights = data.weights;
+      save();
+      render();
+    } catch { alert('Invalid file'); }
+  };
+  reader.readAsText(file);
+}
+
+const importInput = el('input', { type: 'file', accept: '.json', style: { display: 'none' } });
+importInput.onchange = () => { if (importInput.files[0]) importData(importInput.files[0]); importInput.value = ''; };
 
 // ---------- views ----------
 function petView() {
@@ -552,13 +643,31 @@ function petView() {
             paceInfo,
           )
         : null,
-      el('div', { class: 'panel-row' },
+      el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: showChartDialog },
         el('span', { class: 'panel-label' }, 'Last'),
         el('span', { class: 'panel-value' },
           state.weights.length > 0
             ? `${state.weights[state.weights.length - 1].weight} kg`
             : '—'),
       ),
+      p && state.weights.length > 0
+        ? el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: showBMIDialog },
+            el('span', { class: 'panel-label' }, 'BMI'),
+            el('span', { class: 'panel-value' },
+              (() => {
+                const bmi = calcBMI(state.weights[state.weights.length - 1].weight, p.heightCm);
+                const cat = bmiCategory(bmi);
+                if (bmi != null && cat) {
+                  return el('span', { style: { color: cat.color } },
+                    `${bmi.toFixed(1)} `,
+                    el('span', { style: { fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 400 } }, cat.label),
+                  );
+                }
+                return '—';
+              })(),
+            ),
+          )
+        : null,
       p
         ? el('div', { class: 'panel-row panel-sub' },
             el('span', {}, `${p.gender === 'male' ? '♂' : '♀'} ${p.heightCm}cm · Target ${p.targetWeight}kg · Ideal ${ideal != null ? ideal.toFixed(1) : '—'}kg`),
@@ -578,8 +687,17 @@ function historyView() {
         class: 'entry-row',
         onclick: () => showEditDialog(e, idx),
       },
-        el('span', {}, e.date),
+        el('span', { class: 'entry-date' }, e.date.slice(5)),
         el('span', { class: 'weight-val' }, `${e.weight} kg`),
+        el('button', {
+          class: 'delete-entry',
+          onclick: (ev) => {
+            ev.stopPropagation();
+            state.weights.splice(idx, 1);
+            save();
+            render();
+          },
+        }, '✕'),
       );
     }),
   );
@@ -588,13 +706,17 @@ function historyView() {
     el('div', { class: 'chart-wrap' }, canvas),
     el('div', { class: 'history-header' },
       el('h2', { class: 'history-heading' }, 'History'),
-      state.weights.length > 0
-        ? el('button', { class: 'btn reset-btn', onclick: () => {
-            state.weights = [];
-            save();
-            showQuestionnaire(state.profile);
-          }}, 'Reset')
-        : null,
+      el('div', { class: 'history-actions' },
+        el('button', { class: 'action-btn', onclick: exportData }, 'Export'),
+        el('button', { class: 'action-btn', onclick: () => importInput.click() }, 'Import'),
+        state.weights.length > 0
+          ? el('button', { class: 'action-btn danger', onclick: () => {
+              state.weights = [];
+              save();
+              showQuestionnaire(state.profile);
+            }}, 'Reset')
+          : null,
+      ),
     ),
     state.weights.length === 0
       ? el('p', { class: 'empty' }, 'No entries yet')
