@@ -1,1 +1,1 @@
-# WeightPal
+# WeightOgotchi
