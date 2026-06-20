@@ -1,3 +1,11 @@
+function petImageSrc() {
+  if (state.lastAction) {
+    const info = actionInfo(state.lastAction);
+    if (info.image) return info.image;
+  }
+  return 'img/pet.svg';
+}
+
 function petView() {
   const p = state.profile;
   const ideal = calcIdealWeight();
@@ -41,14 +49,21 @@ function petView() {
     ? el('div', { class: 'stat-bar' }, ...statItems)
     : null;
 
+  const imgSrc = petImageSrc();
+  const lastKey = state.lastAction || 'default';
+
   return el('div', { class: 'view pet-view' },
     el('div', { class: 'pet-area' },
-      el('div', {
-        class: 'pet',
-        onclick: showActionMenu,
-        ontouchstart: (e) => { e.currentTarget.style.transform = 'scale(0.92)'; },
-        ontouchend: (e) => { e.currentTarget.style.transform = ''; },
-      }, '🐣'),
+      el('div', { class: 'pet-anim-wrap', 'data-key': lastKey },
+        el('img', {
+          class: 'pet-img',
+          src: imgSrc,
+          alt: 'pet',
+          onclick: showActionMenu,
+          ontouchstart: (e) => { e.currentTarget.style.transform = 'scale(0.92)'; },
+          ontouchend: (e) => { e.currentTarget.style.transform = ''; },
+        }),
+      ),
       bubble,
     ),
     statBar,
@@ -111,7 +126,9 @@ const ALL_ACTION_DEFS = ACTION_DEFS.flatMap(a =>
 
 function actionInfo(key) {
   const def = ALL_ACTION_DEFS.find(a => a.key === key);
-  return def ? { emoji: def.emoji, label: def.label } : { emoji: '❓', label: key };
+  return def
+    ? { emoji: def.emoji, label: def.label, image: def.image }
+    : { emoji: '❓', label: key, image: null };
 }
 
 function historyView() {
@@ -167,6 +184,7 @@ function historyView() {
               state.weights = [];
               state.activities = [];
               state.stats = { sports: 0, candy: 0, alcohol: 0, smoking: 0 };
+              state.lastAction = null;
               save();
               showQuestionnaire(state.profile);
             }}, 'Reset')

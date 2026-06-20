@@ -171,34 +171,35 @@ function showBMIDialog() {
 }
 
 const ACTION_DEFS = [
-  { label: 'Sports', emoji: '🏃', key: 'sports' },
+  { label: 'Sports', emoji: '🏃', key: 'sports', image: 'img/actions/sports.svg' },
   { label: 'Candy', emoji: '🍬', key: 'candy',
     submenu: [
-      { label: 'Some', emoji: '🍬', key: 'candySome' },
-      { label: 'Lots', emoji: '🍫', key: 'candyLots' },
+      { label: 'Some', emoji: '🍬', key: 'candySome', image: 'img/actions/candySome.svg' },
+      { label: 'Lots', emoji: '🍫', key: 'candyLots', image: 'img/actions/candyLots.svg' },
     ] },
   { label: 'Alcohol', emoji: '🍺', key: 'alcohol',
     submenu: [
-      { label: 'Some', emoji: '🍺', key: 'alcoholSome' },
-      { label: 'Lots', emoji: '🍻', key: 'alcoholLots' },
+      { label: 'Some', emoji: '🍺', key: 'alcoholSome', image: 'img/actions/alcoholSome.svg' },
+      { label: 'Lots', emoji: '🍻', key: 'alcoholLots', image: 'img/actions/alcoholLots.svg' },
     ] },
   { label: 'Smoked', emoji: '🚬', key: 'smoking',
     submenu: [
-      { label: 'Some', emoji: '🚬', key: 'smokingSome' },
-      { label: 'Lots', emoji: '🚬', key: 'smokingLots' },
+      { label: 'Some', emoji: '🚬', key: 'smokingSome', image: 'img/actions/smokingSome.svg' },
+      { label: 'Lots', emoji: '🚬', key: 'smokingLots', image: 'img/actions/smokingLots.svg' },
     ] },
   { label: 'Sleep', emoji: '😴', key: 'sleep',
     submenu: [
-      { label: 'Well', emoji: '💤', key: 'sleepWell' },
-      { label: 'Poorly', emoji: '😫', key: 'sleepPoorly' },
-      { label: 'Short', emoji: '⏰', key: 'sleepShort' },
-      { label: 'Long', emoji: '🛌', key: 'sleepLong' },
+      { label: 'Well', emoji: '💤', key: 'sleepWell', image: 'img/actions/sleepWell.svg' },
+      { label: 'Poorly', emoji: '😫', key: 'sleepPoorly', image: 'img/actions/sleepPoorly.svg' },
+      { label: 'Short', emoji: '⏰', key: 'sleepShort', image: 'img/actions/sleepShort.svg' },
+      { label: 'Long', emoji: '🛌', key: 'sleepLong', image: 'img/actions/sleepLong.svg' },
     ] },
 ];
 
 function logAction(key) {
   state.stats[key] = (state.stats[key] || 0) + 1;
   state.activities.push({ action: key, date: new Date().toISOString().slice(0, 10) });
+  state.lastAction = key;
   save();
 }
 
@@ -218,6 +219,7 @@ function showRadialMenu(options, backFn) {
         e.stopPropagation();
         logAction(o.key);
         overlay.remove();
+        render();
       },
     }, o.emoji, ' ', o.label);
     menu.append(btn);
@@ -249,6 +251,7 @@ function showActionMenu() {
         } else {
           logAction(a.key);
           overlay.remove();
+          render();
         }
       },
     }, a.emoji, ' ', a.label);

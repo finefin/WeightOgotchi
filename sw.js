@@ -1,4 +1,4 @@
-const CACHE = 'weightogotchi-v4';
+const CACHE = 'weightogotchi-v5';
 
 const PRECACHE_URLS = [
   '.',
@@ -9,6 +9,18 @@ const PRECACHE_URLS = [
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
+  'img/pet.svg',
+  'img/actions/sports.svg',
+  'img/actions/candySome.svg',
+  'img/actions/candyLots.svg',
+  'img/actions/alcoholSome.svg',
+  'img/actions/alcoholLots.svg',
+  'img/actions/smokingSome.svg',
+  'img/actions/smokingLots.svg',
+  'img/actions/sleepWell.svg',
+  'img/actions/sleepPoorly.svg',
+  'img/actions/sleepShort.svg',
+  'img/actions/sleepLong.svg',
   'src/dom.js',
   'src/state.js',
   'src/bmi.js',
