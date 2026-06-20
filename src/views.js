@@ -32,6 +32,15 @@ function petView() {
 
   const goalReached = prog && prog.completed >= 10;
 
+  const statItems = ALL_ACTION_DEFS
+    .filter(a => (state.stats[a.key] || 0) > 0)
+    .map(a => el('span', { class: 'stat-chip' },
+      `${a.emoji} ${state.stats[a.key]}`,
+    ));
+  const statBar = statItems.length > 0
+    ? el('div', { class: 'stat-bar' }, ...statItems)
+    : null;
+
   return el('div', { class: 'view pet-view' },
     el('div', { class: 'pet-area' },
       el('div', {
@@ -42,6 +51,7 @@ function petView() {
       }, '🐣'),
       bubble,
     ),
+    statBar,
     el('div', { class: 'info-panel' + (goalReached ? ' goal-reached' : '') },
       prog
         ? el('div', { class: 'panel-row' },
