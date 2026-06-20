@@ -427,6 +427,22 @@ html, body {
   min-width: 3rem;
 }
 
+.day-emojis {
+  font-size: 1rem;
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.day-emoji {
+  cursor: help;
+}
+
+.entry-row.no-weight {
+  cursor: default;
+  opacity: 0.6;
+}
+
 .weight-val {
   font-weight: 600;
   color: var(--text);
@@ -478,4 +494,49 @@ html, body {
 .nav-btn.active {
   color: var(--primary);
   font-weight: 600;
+}
+
+/* ----- action menu (radial) ----- */
+.action-menu {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn-center {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+}
+
+.action-btn-circ {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.action-btn-circ:active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
 }
