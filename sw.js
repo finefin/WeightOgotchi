@@ -1,4 +1,4 @@
-const CACHE = 'weightogotchi-v3';
+const CACHE = 'weightogotchi-v4';
 
 const PRECACHE_URLS = [
   '.',
@@ -7,6 +7,16 @@ const PRECACHE_URLS = [
   'style.css',
   'manifest.json',
   'icons/icon.svg',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'src/dom.js',
+  'src/state.js',
+  'src/bmi.js',
+  'src/messages.js',
+  'src/chart.js',
+  'src/dialogs.js',
+  'src/io.js',
+  'src/views.js',
 ];
 
 self.addEventListener('install', (event) => {

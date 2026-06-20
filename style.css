@@ -41,24 +41,25 @@ html, body {
 .pet-view {
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 0.5rem;
   padding: 1rem;
 }
 
 /* ----- pet area ----- */
 .pet-area {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.25rem;
   width: 100%;
-  justify-content: center;
 }
 
 .pet {
-  font-size: 6rem;
+  font-size: 10rem;
   cursor: pointer;
   transition: transform 0.15s ease;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 /* ----- speech bubble ----- */
@@ -66,40 +67,57 @@ html, body {
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 1rem 1rem 1rem 0.25rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  border-radius: 0.75rem 0.75rem 0.75rem 0.25rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
   color: var(--muted);
-  max-width: 220px;
+  max-width: 200px;
   animation: fadeIn 0.3s ease;
 }
 
 .bubble::before {
   content: '';
   position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
   border: 8px solid transparent;
-  border-right-color: var(--border);
-  border-left: 0;
+  border-bottom-color: var(--border);
+  border-top: 0;
 }
 
 .bubble::after {
   content: '';
   position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
   border: 7px solid transparent;
-  border-right-color: var(--surface);
-  border-left: 0;
+  border-bottom-color: var(--surface);
+  border-top: 0;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- stat bar ----- */
+.stat-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.stat-chip {
+  font-size: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.15rem 0.5rem;
+  color: var(--muted);
 }
 
 /* ----- info panel ----- */
@@ -138,8 +156,8 @@ html, body {
 .panel-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1rem;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
   border-bottom: 1px solid var(--border);
 }
 
@@ -148,14 +166,14 @@ html, body {
 }
 
 .panel-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--muted);
-  min-width: 54px;
+  min-width: 44px;
   flex-shrink: 0;
 }
 
 .panel-value {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text);
 }
@@ -281,6 +299,25 @@ html, body {
 
 .weight-input:focus {
   border-color: #818cf8;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.stat-row:last-of-type {
+  border-bottom: none;
+}
+
+.stat-count {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 1.1rem;
 }
 
 .btn {

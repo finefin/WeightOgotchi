@@ -1,3 +1,11 @@
+function toggleFS() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
 function render() {
   if (!state.profile) {
     showQuestionnaire();
@@ -6,6 +14,8 @@ function render() {
 
   const views = { pet: petView, history: historyView };
   const content = views[state.view]();
+
+  const fsActive = !!document.fullscreenElement;
 
   const nav = el('nav', { class: 'nav' },
     el('button', {
@@ -16,10 +26,20 @@ function render() {
       class: 'nav-btn' + (state.view === 'history' ? ' active' : ''),
       onclick: () => { state.view = 'history'; render(); },
     }, '📈 History'),
+    el('button', {
+      class: 'nav-btn',
+      onclick: showStatsDialog,
+    }, '📊 Stats'),
+    el('button', {
+      class: 'nav-btn fs-btn',
+      onclick: toggleFS,
+    }, fsActive ? '⛶ Exit' : '⛶ Fullscreen'),
   );
 
   $('#app').replaceChildren(content, nav);
 }
+
+document.addEventListener('fullscreenchange', render);
 
 if (!state.profile || state.weights.length === 0) {
   showQuestionnaire(state.profile || undefined);

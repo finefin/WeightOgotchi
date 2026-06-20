@@ -261,6 +261,33 @@ function showActionMenu() {
   document.body.append(overlay);
 }
 
+function showStatsDialog() {
+  const overlay = el('div', { class: 'overlay', onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
+
+  const entries = Object.entries(state.stats)
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => {
+      const info = actionInfo(key);
+      return el('div', { class: 'stat-row' },
+        el('span', {}, `${info.emoji} ${info.label}`),
+        el('span', { class: 'stat-count' }, `${count}`),
+      );
+    });
+
+  const dialog = el('div', { class: 'dialog', style: { maxWidth: 320 } },
+    el('h2', {}, 'Activity Stats'),
+    entries.length > 0
+      ? entries
+      : el('p', { style: { textAlign: 'center', color: 'var(--muted)' } }, 'No activities logged yet'),
+    el('div', { class: 'dialog-actions' },
+      el('button', { class: 'btn', onclick: () => overlay.remove() }, 'Close'),
+    ),
+  );
+  overlay.append(dialog);
+  document.body.append(overlay);
+}
+
 function showChartDialog() {
   if (state.weights.length === 0) return;
   const overlay = el('div', { class: 'overlay', style: { alignItems: 'flex-end', padding: 0 }, onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
