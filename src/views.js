@@ -1,3 +1,21 @@
+let devMode = false;
+let devTapCount = 0;
+let devTapTimer = null;
+
+function handlePetTap() {
+  devTapCount++;
+  clearTimeout(devTapTimer);
+  devTapTimer = setTimeout(() => { devTapCount = 0; }, 10000);
+  if (devTapCount >= 10) {
+    devTapCount = 0;
+    if (!devMode) {
+      devMode = true;
+      render();
+    }
+  }
+  showActionMenu();
+}
+
 function petImageSrc() {
   if (state.lastAction) {
     const info = actionInfo(state.lastAction);
@@ -59,7 +77,7 @@ function petView() {
           class: 'pet-img',
           src: imgSrc,
           alt: 'pet',
-          onclick: showActionMenu,
+          onclick: handlePetTap,
           ontouchstart: (e) => { e.currentTarget.style.transform = 'scale(0.92)'; },
           ontouchend: (e) => { e.currentTarget.style.transform = ''; },
         }),
@@ -67,6 +85,16 @@ function petView() {
       bubble,
     ),
     statBar,
+    el('div', { class: 'happiness-bar' },
+      el('div', { class: 'happiness-label' }, '😠'),
+      el('div', { class: 'happiness-track' },
+        el('div', {
+          class: 'happiness-fill',
+          style: { width: `${((state.happiness + 1) / 2) * 100}%` },
+        }),
+      ),
+      el('div', { class: 'happiness-label' }, '😊'),
+    ),
     el('div', { class: 'info-panel' + (goalReached ? ' goal-reached' : '') },
       prog
         ? el('div', { class: 'panel-row' },
@@ -115,6 +143,7 @@ function petView() {
           )
         : null,
     ),
+    devMode ? devPanel() : null,
   );
 }
 
@@ -129,6 +158,108 @@ function actionInfo(key) {
   return def
     ? { emoji: def.emoji, label: def.label, image: def.image }
     : { emoji: '❓', label: key, image: null };
+}
+
+function actionHappiness(key) {
+  const def = ALL_ACTION_DEFS.find(a => a.key === key);
+  return def?.happiness || 0;
+}
+
+function categoryIndex(key) {
+  for (let i = 0; i < ACTION_DEFS.length; i++) {
+    const def = ACTION_DEFS[i];
+    if (def.key === key) return i;
+    if (def.submenu && def.submenu.some(s => s.key === key)) return i;
+  }
+  return ACTION_DEFS.length;
+}
+
+function devPanel() {
+  const btn = (label, fn, cls) => el('button', {
+    class: 'dev-btn' + (cls ? ' ' + cls : ''),
+    onclick: fn,
+  }, label);
+
+  return el('div', { class: 'dev-panel' },
+    el('div', { class: 'dev-title' }, '⚙ Dev Mode'),
+    el('div', { class: 'dev-row' },
+      btn('25%', () => devSetProgress(0.25)),
+      btn('50%', () => devSetProgress(0.5)),
+      btn('75%', () => devSetProgress(0.75)),
+      btn('Goal!', devSetGoal),
+    ),
+    el('div', { class: 'dev-row' },
+      btn('Overdue', devSetOverdue),
+      btn('➕ Weight', devAddWeight),
+      btn('➕ Activity', devAddActivity),
+    ),
+    el('div', { class: 'dev-row' },
+      btn('🧹 Clear', devClear, 'danger'),
+      btn('🚪 Exit', () => { devMode = false; render(); }),
+    ),
+  );
+}
+
+function devSetProgress(pct) {
+  const p = state.profile;
+  if (!p || state.weights.length === 0) return;
+  const sorted = [...state.weights].sort((a, b) => a.date.localeCompare(b.date));
+  const first = sorted[0].weight;
+  const step = (p.targetWeight - first) / 10;
+  const val = first + step * pct * 10;
+  const today = new Date().toISOString().slice(0, 10);
+  state.weights.push({ weight: Math.round(val * 10) / 10, date: today });
+  save();
+  render();
+}
+
+function devSetGoal() {
+  const p = state.profile;
+  if (!p) return;
+  const today = new Date().toISOString().slice(0, 10);
+  state.weights.push({ weight: p.targetWeight, date: today });
+  save();
+  render();
+}
+
+function devSetOverdue() {
+  const p = state.profile;
+  if (!p) return;
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  p.targetDate = d.toISOString().slice(0, 10);
+  save();
+  render();
+}
+
+function devAddWeight() {
+  const current = state.weights[state.weights.length - 1]?.weight || 70;
+  const delta = (Math.random() - 0.45) * 1.2;
+  const lastDate = state.weights[state.weights.length - 1]?.date;
+  const d = lastDate ? new Date(lastDate) : new Date();
+  d.setDate(d.getDate() + 1);
+  const date = d.toISOString().slice(0, 10);
+  state.weights.push({ weight: Math.round((current + delta) * 10) / 10, date });
+  adjustHappinessForWeight();
+  save();
+  render();
+}
+
+function devAddActivity() {
+  const keys = ALL_ACTION_DEFS.map(a => a.key);
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  logAction(key);
+  render();
+}
+
+function devClear() {
+  state.weights = [];
+  state.activities = [];
+  state.stats = {};
+  state.lastAction = null;
+  state.happiness = 0;
+  save();
+  render();
 }
 
 function historyView() {
@@ -149,10 +280,12 @@ function historyView() {
   const list = el('ul', { class: 'weight-list' },
     ...sortedDates.map(date => {
       const day = byDate[date];
-      const emojiEls = day.activities.map(a => {
-        const info = actionInfo(a.action);
-        return el('span', { class: 'day-emoji', title: info.label }, info.emoji);
-      });
+      const emojiEls = [...day.activities]
+        .sort((a, b) => categoryIndex(a.action) - categoryIndex(b.action))
+        .map(a => {
+          const info = actionInfo(a.action);
+          return el('span', { class: 'day-emoji', title: info.label }, info.emoji);
+        });
 
       return el('li', {
         class: 'entry-row' + (day.weight ? '' : ' no-weight'),

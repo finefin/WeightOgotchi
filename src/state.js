@@ -6,6 +6,7 @@ const state = {
   activities: saved.activities || [],
   stats: saved.stats || { sports: 0, candy: 0, alcohol: 0, smoking: 0 },
   lastAction: saved.lastAction || null,
+  happiness: saved.happiness ?? 0,
   view: 'pet',
 };
 
@@ -16,6 +17,7 @@ function save() {
     activities: state.activities,
     stats: state.stats,
     lastAction: state.lastAction,
+    happiness: state.happiness,
   }));
 }
 

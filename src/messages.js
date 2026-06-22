@@ -1,3 +1,98 @@
+const ACTIVITY_MESSAGES = {
+  sports: [
+    'Oh look, you moved your body. The couch is devastated by the breakup.',
+    'Exercise? In THIS economy? Fine, I respect the hustle.',
+    'Sweating is just your fat cells crying. Excellent work.',
+    'You exercised! I need to sit down. Actually, you did that for me.',
+    'Physical activity detected. My circuits are confused.',
+  ],
+  sportStairs: [
+    'Stairs? The elevator is going to file a missing person report.',
+    'You chose the stairs. Your calves are simultaneously grateful and furious.',
+    'Climbing stairs like a maniac. Your cardio thanks you. Your knees? Not so much.',
+  ],
+  sportWalk: [
+    'A walk! Look at you, communing with nature like a normal person.',
+    'Walking: the most underrated exercise. You\'re basically a philosopher now.',
+    'You went for a walk. Fresh air and movement. Who even are you?',
+  ],
+  sportTramp: [
+    'Trampoline? You\'re literally bouncing your way to fitness. I respect that.',
+    'Jumping on a trampoline is not a workout. It\'s a childhood dream. Keep going.',
+    'Bounce bounce bounce. That\'s the sound of you having way too much fun exercising.',
+  ],
+  sportMarathon: [
+    'A MARATHON? I take back every lazy thing I ever said about you.',
+    'You ran HOW far? I need to lie down just thinking about it.',
+    'Marathon training? You\'re either insane or inspirational. Both, probably.',
+    'Running 42km? Your legs are going to hate you tomorrow. But today? Today you\'re a legend.',
+  ],
+  candySome: [
+    'A little sugar won\'t kill you. Probably. Don\'t test it.',
+    'One piece? That\'s what I call "responsible indulgence." Boring but valid.',
+    'Moderation? From YOU? I\'m genuinely impressed.',
+  ],
+  candyLots: [
+    'That\'s a lot of sugar. The spoon is probably filing a restraining order.',
+    'Dentists across the globe just felt a disturbance in the force.',
+    'You ate how much sugar? I\'m not judging. OK, I\'m judging a little.',
+    'Sugar rush or crash waiting to happen? Only time will tell.',
+  ],
+  foodFast: [
+    'Fast food? Your arteries are drafting a strongly worded letter.',
+    'A burger in this economy? Bold. Your future self will pay the bill.',
+    'Fast food is a hug for your taste buds and a punch for your waistline.',
+    'You ate that in 5 minutes. Your digestive system needs a cigarette.',
+  ],
+  foodHealthy: [
+    'Healthy food? Who are you and what have you done with yourself?',
+    'Eating your greens? I\'m genuinely impressed. And confused.',
+    'A salad? In THIS economy? Look at you, being all responsible.',
+    'You ate something that didn\'t come from a wrapper. Proud of you.',
+    'Vegetables? That\'s not a food group, that\'s a personality change.',
+  ],
+  alcoholSome: [
+    'A drink or two. Responsible. Boring. But responsible.',
+    'Moderate drinking. Your liver sends its thanks. For now.',
+    'One drink? That\'s cute. Did you pair it with a cheese board too?',
+  ],
+  alcoholLots: [
+    'Someone had a party. Your future self is going to send you a very mean text.',
+    'Lots of alcohol? Tomorrow you is going to hate today you. Classic.',
+    'The hangover has entered the chat. It brought regrets.',
+  ],
+  smokingSome: [
+    'A smoke break. Your lungs are drafting a strongly worded letter.',
+    'Just a few puffs. The addiction thanks you for the tip.',
+    'Smoking "a little" is like being "a little pregnant." But hey, your life.',
+  ],
+  smokingLots: [
+    'Chain smoking? Your lungs have unionized and they\'re striking.',
+    'That\'s a lot of smoke. I can smell it through the screen.',
+    'Your future self is wheezing. But present you is having a great time.',
+  ],
+  sleepWell: [
+    'Good sleep! You\'re basically a superhero now. A well-rested, boring superhero.',
+    'Slept well? Congratulations on being a functional human for once.',
+    '8 hours? Show off. Some of us run on sarcasm and 4 hours of existential dread.',
+  ],
+  sleepPoorly: [
+    'Terrible sleep? That explains the dark circles. And the life choices.',
+    'You slept poorly. I can tell by your decision to check your phone at 3am.',
+    'Bad sleep is just your brain practicing for when you\'re dead. You\'re welcome.',
+  ],
+  sleepShort: [
+    'Short sleep? That\'s just your body saving time. Very efficient of you.',
+    '4 hours? Bold strategy. Let\'s see if it pays off.',
+    'Sleep is for the weak. And for people who want to live past 50.',
+  ],
+  sleepLong: [
+    'Slept in? Your responsibilities are forming a support group.',
+    'Long sleep? You\'re either recovering or avoiding. Both are valid.',
+    'You slept for HOW long? I\'m jealous and I don\'t even have eyes.',
+  ],
+};
+
 const MESSAGES = {
   welcome: [
     'Oh great, another human who thinks this time it\'ll stick. Fine, tap me.',
@@ -67,6 +162,7 @@ const MESSAGES = {
 
 function getMessage() {
   if (!state.profile) return MESSAGES.welcome[0];
+
   if (state.weights.length === 0) {
     return MESSAGES.welcome[Math.floor(Math.random() * MESSAGES.welcome.length)];
   }
@@ -85,6 +181,11 @@ function getMessage() {
 
   if (overdue) {
     return MESSAGES.overdue[Math.floor(Math.random() * MESSAGES.overdue.length)];
+  }
+
+  if (state.lastAction && ACTIVITY_MESSAGES[state.lastAction]) {
+    const msgs = ACTIVITY_MESSAGES[state.lastAction];
+    return msgs[Math.floor(Math.random() * msgs.length)];
   }
 
   if (sorted.length === 1) {

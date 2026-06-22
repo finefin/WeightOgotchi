@@ -70,6 +70,7 @@ function showWeightDialog() {
     const w = parseFloat(input.value);
     if (!w) return;
     state.weights.push({ weight: w, date: today });
+    adjustHappinessForWeight();
     save();
     overlay.remove();
     render();
@@ -100,6 +101,7 @@ function showEditDialog(entry, idx) {
     const w = parseFloat(input.value);
     if (!w) return;
     state.weights[idx].weight = w;
+    adjustHappinessForWeight();
     save();
     overlay.remove();
     render();
@@ -171,28 +173,38 @@ function showBMIDialog() {
 }
 
 const ACTION_DEFS = [
-  { label: 'Sports', emoji: '🏃', key: 'sports', image: 'img/actions/sports.svg' },
-  { label: 'Candy', emoji: '🍬', key: 'candy',
+  
+  { label: 'Sports', emoji: '🏃', key: 'sports', 
     submenu: [
-      { label: 'Some', emoji: '🍬', key: 'candySome', image: 'img/actions/candySome.svg' },
-      { label: 'Lots', emoji: '🍫', key: 'candyLots', image: 'img/actions/candyLots.svg' },
+      { label: 'Stairs', emoji: '🧗', key: 'sportStairs', image: 'img/actions/sportStairs.svg', happiness: 0.1 },
+      { label: 'Walking', emoji: '🚶', key: 'sportWalk', image: 'img/actions/sportWalk.svg', happiness: 0.12 },
+      { label: 'Trampoline', emoji: '🤸', key: 'sportTramp', image: 'img/actions/sportTramp.svg', happiness: 0.18 },
+      { label: 'Marathon', emoji: '🏅', key: 'sportMarathon', image: 'img/actions/sportMarathon.svg', happiness: 0.25 },
+    ]
+  },
+  { label: 'Food', emoji: '🍽️', key: 'food',
+    submenu: [
+      { label: 'Candy', emoji: '🍬', key: 'candySome', image: 'img/actions/candySome.svg', happiness: -0.1 },
+      { label: 'Lots of candy', emoji: '🍫', key: 'candyLots', image: 'img/actions/candyLots.svg', happiness: -0.2 },
+      { label: 'Fast food', emoji: '🍔', key: 'foodFast', image: 'img/actions/foodFast.svg', happiness: -0.15 },
+      { label: 'Healthy food', emoji: '🥗', key: 'foodHealthy', image: 'img/actions/foodHealthy.svg', happiness: 0.1 },
     ] },
   { label: 'Alcohol', emoji: '🍺', key: 'alcohol',
     submenu: [
-      { label: 'Some', emoji: '🍺', key: 'alcoholSome', image: 'img/actions/alcoholSome.svg' },
-      { label: 'Lots', emoji: '🍻', key: 'alcoholLots', image: 'img/actions/alcoholLots.svg' },
+      { label: 'Some', emoji: '🍺', key: 'alcoholSome', image: 'img/actions/alcoholSome.svg', happiness: -0.12 },
+      { label: 'Lots', emoji: '🍻', key: 'alcoholLots', image: 'img/actions/alcoholLots.svg', happiness: -0.25 },
     ] },
   { label: 'Smoked', emoji: '🚬', key: 'smoking',
     submenu: [
-      { label: 'Some', emoji: '🚬', key: 'smokingSome', image: 'img/actions/smokingSome.svg' },
-      { label: 'Lots', emoji: '🚬', key: 'smokingLots', image: 'img/actions/smokingLots.svg' },
+      { label: 'Some', emoji: '🚬', key: 'smokingSome', image: 'img/actions/smokingSome.svg', happiness: -0.15 },
+      { label: 'Lots', emoji: '🚬', key: 'smokingLots', image: 'img/actions/smokingLots.svg', happiness: -0.3 },
     ] },
   { label: 'Sleep', emoji: '😴', key: 'sleep',
     submenu: [
-      { label: 'Well', emoji: '💤', key: 'sleepWell', image: 'img/actions/sleepWell.svg' },
-      { label: 'Poorly', emoji: '😫', key: 'sleepPoorly', image: 'img/actions/sleepPoorly.svg' },
-      { label: 'Short', emoji: '⏰', key: 'sleepShort', image: 'img/actions/sleepShort.svg' },
-      { label: 'Long', emoji: '🛌', key: 'sleepLong', image: 'img/actions/sleepLong.svg' },
+      { label: 'Well', emoji: '💤', key: 'sleepWell', image: 'img/actions/sleepWell.svg', happiness: 0.05 },
+      { label: 'Poorly', emoji: '😫', key: 'sleepPoorly', image: 'img/actions/sleepPoorly.svg', happiness: -0.05 },
+      { label: 'Short', emoji: '⏰', key: 'sleepShort', image: 'img/actions/sleepShort.svg', happiness: -0.08 },
+      { label: 'Long', emoji: '🛌', key: 'sleepLong', image: 'img/actions/sleepLong.svg', happiness: 0.1 },
     ] },
 ];
 
@@ -200,7 +212,23 @@ function logAction(key) {
   state.stats[key] = (state.stats[key] || 0) + 1;
   state.activities.push({ action: key, date: new Date().toISOString().slice(0, 10) });
   state.lastAction = key;
+  const def = ALL_ACTION_DEFS.find(a => a.key === key);
+  if (def && def.happiness) {
+    state.happiness = Math.max(-1, Math.min(1, state.happiness + def.happiness));
+  }
   save();
+}
+
+function adjustHappinessForWeight() {
+  const p = state.profile;
+  if (!p || state.weights.length < 2) return;
+  const sorted = [...state.weights].sort((a, b) => a.date.localeCompare(b.date));
+  const prev = sorted[sorted.length - 2].weight;
+  const current = sorted[sorted.length - 1].weight;
+  const target = p.targetWeight;
+  if (Math.abs(current - target) < Math.abs(prev - target)) {
+    state.happiness = Math.min(1, state.happiness + 0.08);
+  }
 }
 
 function showRadialMenu(options, backFn) {
@@ -209,7 +237,7 @@ function showRadialMenu(options, backFn) {
 
   options.forEach((o, i) => {
     const angle = (Math.PI / 2) + (i / options.length) * Math.PI * 2;
-    const r = 100;
+    const r = 120;
     const x = Math.cos(angle) * r;
     const y = Math.sin(angle) * r;
     const btn = el('button', {
@@ -221,7 +249,7 @@ function showRadialMenu(options, backFn) {
         overlay.remove();
         render();
       },
-    }, o.emoji, ' ', o.label);
+    }, o.emoji);
     menu.append(btn);
   });
 
@@ -237,7 +265,7 @@ function showActionMenu() {
 
   ACTION_DEFS.forEach((a, i) => {
     const angle = (Math.PI / 2) + (i / ACTION_DEFS.length) * Math.PI * 2;
-    const r = 100;
+    const r = 120;
     const x = Math.cos(angle) * r;
     const y = Math.sin(angle) * r;
     const btn = el('button', {
@@ -254,7 +282,7 @@ function showActionMenu() {
           render();
         }
       },
-    }, a.emoji, ' ', a.label);
+    }, a.emoji);
     menu.append(btn);
   });
 
@@ -266,23 +294,72 @@ function showActionMenu() {
 
 function showStatsDialog() {
   const overlay = el('div', { class: 'overlay', onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
+  const currentHappiness = state.happiness ?? 0;
 
-  const entries = Object.entries(state.stats)
+  const happinessLabel = (key) => {
+    const h = actionHappiness(key);
+    if (h === 0) return null;
+    const color = h > 0 ? '#22c55e' : '#ef4444';
+    const sign = h > 0 ? '+' : '';
+    return el('span', {
+      class: 'stat-happiness',
+      style: { color },
+    }, `${sign}${h.toFixed(2)}`);
+  };
+
+  const allEntries = Object.entries(state.stats)
     .filter(([, count]) => count > 0)
-    .sort((a, b) => b[1] - a[1])
-    .map(([key, count]) => {
+    .sort((a, b) => categoryIndex(a[0]) - categoryIndex(b[0]));
+
+  const goodEntries = allEntries.filter(([k]) => actionHappiness(k) > 0);
+  const badEntries = allEntries.filter(([k]) => actionHappiness(k) < 0);
+
+  const section = (title, entries, color) => entries.length === 0 ? null : el('div', { class: 'stat-section' },
+    el('div', { class: 'stat-section-title', style: { color } }, title),
+    ...entries.map(([key, count]) => {
       const info = actionInfo(key);
       return el('div', { class: 'stat-row' },
-        el('span', {}, `${info.emoji} ${info.label}`),
+        el('div', { class: 'stat-info' },
+          el('span', {}, `${info.emoji} ${info.label}`),
+          happinessLabel(key),
+        ),
         el('span', { class: 'stat-count' }, `${count}`),
       );
-    });
+    }),
+  );
 
-  const dialog = el('div', { class: 'dialog', style: { maxWidth: 320 } },
+  const goodTotal = goodEntries.reduce((s, [k, c]) => s + actionHappiness(k) * c, 0);
+  const badTotal = badEntries.reduce((s, [k, c]) => s + Math.abs(actionHappiness(k)) * c, 0);
+
+  const dialog = el('div', { class: 'dialog', style: { maxWidth: 340 } },
     el('h2', {}, 'Activity Stats'),
-    entries.length > 0
-      ? entries
+    el('div', { class: 'stat-happiness-bar' },
+      el('span', {}, '😠'),
+      el('div', { class: 'stat-happiness-track' },
+        el('div', {
+          class: 'stat-happiness-fill',
+          style: { width: `${((currentHappiness + 1) / 2) * 100}%` },
+        }),
+      ),
+      el('span', {}, '😊'),
+      el('span', { class: 'stat-happiness-value' }, `${(1 + currentHappiness).toFixed(2)}`),
+    ),
+    goodEntries.length + badEntries.length > 0
+      ? [section('Good', goodEntries, '#22c55e'), section('Bad', badEntries, '#ef4444')]
       : el('p', { style: { textAlign: 'center', color: 'var(--muted)' } }, 'No activities logged yet'),
+    goodEntries.length + badEntries.length > 0
+      ? el('div', { class: 'stat-equation' },
+          el('span', {}, '1.00'),
+          el('span', {}, ' + '),
+          el('span', { style: { color: '#22c55e' } }, goodTotal > 0 ? `+${goodTotal.toFixed(2)}` : '0.00'),
+          el('span', {}, ' − '),
+          el('span', { style: { color: '#ef4444' } }, badTotal > 0 ? badTotal.toFixed(2) : '0.00'),
+          el('span', {}, ' = '),
+          el('span', {
+            style: { color: currentHappiness >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700 },
+          }, (1 + currentHappiness).toFixed(2)),
+        )
+      : null,
     el('div', { class: 'dialog-actions' },
       el('button', { class: 'btn', onclick: () => overlay.remove() }, 'Close'),
     ),

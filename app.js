@@ -30,13 +30,14 @@ function render() {
       class: 'nav-btn',
       onclick: showStatsDialog,
     }, '📊 Stats'),
-    el('button', {
-      class: 'nav-btn fs-btn',
-      onclick: toggleFS,
-    }, fsActive ? '⛶ Exit' : '⛶ Fullscreen'),
   );
 
-  $('#app').replaceChildren(content, nav);
+  const fsBtn = el('button', {
+    class: 'fs-float',
+    onclick: toggleFS,
+  }, fsActive ? '⛶' : '⛶');
+
+  $('#app').replaceChildren(content, nav, fsBtn);
 }
 
 document.addEventListener('fullscreenchange', render);
