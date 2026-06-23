@@ -17,9 +17,37 @@ function handlePetTap() {
   showActionMenu();
 }
 
+function mostSignificantRecentAction() {
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const cutoff = twoDaysAgo.toISOString().slice(0, 10);
+
+  let best = null;
+  let bestAbs = 0;
+  const seen = new Set();
+  for (let i = state.activities.length - 1; i >= 0; i--) {
+    const a = state.activities[i];
+    if (a.date < cutoff) break;
+    if (seen.has(a.action)) continue;
+    seen.add(a.action);
+    const h = actionHappiness(a.action);
+    const absH = Math.abs(h);
+    if (absH > bestAbs) {
+      bestAbs = absH;
+      best = a.action;
+    }
+  }
+  return best;
+}
+
 function petImageSrc() {
-  if (state.lastAction) {
+  if (state.lastAction && window._lastActionTime && Date.now() - window._lastActionTime < 10000) {
     const info = actionInfo(state.lastAction);
+    if (info.image) return info.image;
+  }
+  const significant = mostSignificantRecentAction();
+  if (significant) {
+    const info = actionInfo(significant);
     if (info.image) return info.image;
   }
   return 'img/pet.svg';

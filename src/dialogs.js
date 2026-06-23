@@ -216,15 +216,20 @@ const ACTION_DEFS = [
     ] },
 ];
 
+let _reactionTimer = null;
+
 function logAction(key) {
   state.stats[key] = (state.stats[key] || 0) + 1;
   state.activities.push({ action: key, date: new Date().toISOString().slice(0, 10) });
   state.lastAction = key;
+  window._lastActionTime = Date.now();
   const def = ALL_ACTION_DEFS.find(a => a.key === key);
   if (def && def.happiness) {
     state.happiness = Math.max(-1, Math.min(1, state.happiness + def.happiness));
   }
   save();
+  clearTimeout(_reactionTimer);
+  _reactionTimer = setTimeout(() => { if (typeof render === 'function') render(); }, 10000);
 }
 
 function adjustHappinessForWeight() {
