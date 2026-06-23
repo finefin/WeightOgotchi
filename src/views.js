@@ -127,8 +127,7 @@ function petView() {
                 const cat = bmiCategory(bmi);
                 if (bmi != null && cat) {
                   return el('span', { style: { color: cat.color } },
-                    `${bmi.toFixed(1)} `,
-                    el('span', { style: { fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 400 } }, cat.label),
+                    `${bmi.toFixed(1)}`,
                   );
                 }
                 return '—';

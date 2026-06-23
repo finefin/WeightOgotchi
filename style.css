@@ -717,44 +717,76 @@ html, body {
 /* ----- action menu (radial) ----- */
 .action-menu {
   position: relative;
-  width: 360px;
-  height: 360px;
+  width: 400px;
+  height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .action-btn-center {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   border: none;
   background: var(--primary);
   color: #fff;
-  font-size: 0.8rem;
-  font-weight: 700;
   cursor: pointer;
   z-index: 2;
   box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.action-btn-center-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.action-btn-center-label {
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .action-btn-circ {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  font-size: 2.5rem;
-  font-weight: 600;
   cursor: pointer;
   z-index: 1;
   transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+.action-btn-circ-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.action-btn-circ-label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--muted);
 }
 
 .action-btn-circ:active {
   background: var(--primary);
   border-color: var(--primary);
+  color: #fff;
+}
+
+.action-btn-circ:active .action-btn-circ-label {
   color: #fff;
 }

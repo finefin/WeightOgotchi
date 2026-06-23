@@ -237,7 +237,7 @@ function showRadialMenu(options, backFn) {
 
   options.forEach((o, i) => {
     const angle = (Math.PI / 2) + (i / options.length) * Math.PI * 2;
-    const r = 120;
+    const r = 130;
     const x = Math.cos(angle) * r;
     const y = Math.sin(angle) * r;
     const btn = el('button', {
@@ -249,11 +249,16 @@ function showRadialMenu(options, backFn) {
         overlay.remove();
         render();
       },
-    }, o.emoji);
+    },
+      el('span', { class: 'action-btn-circ-icon' }, o.emoji),
+      el('span', { class: 'action-btn-circ-label' }, o.label),
+    );
     menu.append(btn);
   });
 
-  const centerBtn = el('button', { class: 'action-btn-center', onclick: () => { overlay.remove(); backFn(); } }, '← Back');
+  const centerBtn = el('button', { class: 'action-btn-center', onclick: () => { overlay.remove(); backFn(); } },
+    el('span', { class: 'action-btn-center-label' }, '← Back'),
+  );
   menu.append(centerBtn);
   overlay.append(menu);
   document.body.append(overlay);
@@ -265,7 +270,7 @@ function showActionMenu() {
 
   ACTION_DEFS.forEach((a, i) => {
     const angle = (Math.PI / 2) + (i / ACTION_DEFS.length) * Math.PI * 2;
-    const r = 120;
+    const r = 130;
     const x = Math.cos(angle) * r;
     const y = Math.sin(angle) * r;
     const btn = el('button', {
@@ -282,11 +287,17 @@ function showActionMenu() {
           render();
         }
       },
-    }, a.emoji);
+    },
+      el('span', { class: 'action-btn-circ-icon' }, a.emoji),
+      el('span', { class: 'action-btn-circ-label' }, a.label),
+    );
     menu.append(btn);
   });
 
-  const centerBtn = el('button', { class: 'action-btn-center', onclick: () => { overlay.remove(); showWeightDialog(); } }, '⚖️ Enter weight');
+  const centerBtn = el('button', { class: 'action-btn-center', onclick: () => { overlay.remove(); showWeightDialog(); } },
+    el('span', { class: 'action-btn-center-icon' }, '⚖️'),
+    el('span', { class: 'action-btn-center-label' }, 'Weight'),
+  );
   menu.append(centerBtn);
   overlay.append(menu);
   document.body.append(overlay);
