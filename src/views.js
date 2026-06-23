@@ -1,6 +1,7 @@
 let devMode = false;
 let devTapCount = 0;
 let devTapTimer = null;
+let locked = true;
 
 function handlePetTap() {
   devTapCount++;
@@ -57,6 +58,7 @@ function petView() {
   }
 
   const goalReached = prog && prog.completed >= 10;
+  const isLocked = state.profile?.password && locked;
 
   const statItems = ALL_ACTION_DEFS
     .filter(a => (state.stats[a.key] || 0) > 0)
@@ -111,27 +113,30 @@ function petView() {
             paceInfo,
           )
         : null,
-      el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: showChartDialog },
+      el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: isLocked ? showPasswordPrompt : showChartDialog },
         el('span', { class: 'panel-label' }, 'Last'),
         el('span', { class: 'panel-value' },
-          state.weights.length > 0
-            ? `${state.weights[state.weights.length - 1].weight} kg`
-            : '—'),
+          isLocked
+            ? '🔒'
+            : state.weights.length > 0
+              ? `${state.weights[state.weights.length - 1].weight} kg`
+              : '—'),
       ),
       p && state.weights.length > 0
-        ? el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: showBMIDialog },
+        ? el('div', { class: 'panel-row', style: { cursor: 'pointer' }, onclick: isLocked ? showPasswordPrompt : showBMIDialog },
             el('span', { class: 'panel-label' }, 'BMI'),
             el('span', { class: 'panel-value' },
-              (() => {
-                const bmi = calcBMI(state.weights[state.weights.length - 1].weight, p.heightCm);
-                const cat = bmiCategory(bmi);
-                if (bmi != null && cat) {
-                  return el('span', { style: { color: cat.color } },
-                    `${bmi.toFixed(1)}`,
-                  );
-                }
-                return '—';
-              })(),
+              isLocked ? '🔒'
+                : (() => {
+                    const bmi = calcBMI(state.weights[state.weights.length - 1].weight, p.heightCm);
+                    const cat = bmiCategory(bmi);
+                    if (bmi != null && cat) {
+                      return el('span', { style: { color: cat.color } },
+                        `${bmi.toFixed(1)}`,
+                      );
+                    }
+                    return '—';
+                  })(),
             ),
           )
         : null,
@@ -262,6 +267,15 @@ function devClear() {
 }
 
 function historyView() {
+  const isLocked = state.profile?.password && locked;
+
+  if (isLocked) {
+    return el('div', { class: 'view history-view', style: { alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '2rem' } },
+      el('p', { style: { fontSize: '2rem' }, onclick: showPasswordPrompt }, '🔒'),
+      el('p', { style: { color: 'var(--muted)', fontSize: '0.85rem', cursor: 'pointer' }, onclick: showPasswordPrompt }, 'Tap to unlock'),
+    );
+  }
+
   const canvas = el('canvas', { class: 'chart' });
 
   const byDate = {};

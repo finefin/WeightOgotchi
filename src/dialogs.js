@@ -27,6 +27,11 @@ function showQuestionnaire(existing) {
     return b;
   }
 
+  const passwordInput = el('input', {
+    type: 'password', placeholder: 'Leave blank for no password',
+    class: 'weight-input', value: existing?.password || '',
+  });
+
   const isEdit = !!existing;
   const dialog = el('div', { class: 'dialog questionnaire' },
     el('h1', {}, isEdit ? 'Your Profile' : 'Welcome!'),
@@ -42,14 +47,17 @@ function showQuestionnaire(existing) {
     targetInput,
     el('label', { class: 'field-label' }, 'Target date'),
     dateInput,
+    el('label', { class: 'field-label' }, 'Password (optional)'),
+    passwordInput,
     el('button', { class: 'btn', onclick: () => {
       const h = parseFloat(heightInput.value);
       const t = parseFloat(targetInput.value);
       const d = dateInput.value;
       if (!h || !t || !d) return;
-      state.profile = { gender, heightCm: h, targetWeight: t, targetDate: d };
+      state.profile = { gender, heightCm: h, targetWeight: t, targetDate: d, password: passwordInput.value || null };
       save();
       overlay.remove();
+      if (state.profile.password) { locked = true; } else { locked = false; }
       render();
     }}, isEdit ? 'Save' : 'Start!'),
   );
@@ -301,6 +309,40 @@ function showActionMenu() {
   menu.append(centerBtn);
   overlay.append(menu);
   document.body.append(overlay);
+}
+
+function showPasswordPrompt(callback) {
+  const overlay = el('div', { class: 'overlay', onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
+  const input = el('input', {
+    type: 'password', placeholder: 'Enter password',
+    class: 'weight-input',
+    onkeydown: (e) => { if (e.key === 'Enter') check(); },
+  });
+
+  function check() {
+    if (input.value === state.profile?.password) {
+      locked = false;
+      overlay.remove();
+      if (callback) callback();
+      else render();
+    } else {
+      input.style.borderColor = '#ef4444';
+      setTimeout(() => { input.style.borderColor = ''; }, 800);
+    }
+  }
+
+  const dialog = el('div', { class: 'dialog', style: { maxWidth: 280 } },
+    el('h2', {}, 'Unlock'),
+    el('p', { style: { textAlign: 'center', color: 'var(--muted)', fontSize: '0.85rem', marginTop: '-0.5rem' } }, 'Enter your password to view data'),
+    input,
+    el('div', { class: 'dialog-actions' },
+      el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Cancel'),
+      el('button', { class: 'btn', onclick: check }, 'Unlock'),
+    ),
+  );
+  overlay.append(dialog);
+  document.body.append(overlay);
+  setTimeout(() => input.focus(), 100);
 }
 
 function showStatsDialog() {

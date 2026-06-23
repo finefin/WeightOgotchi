@@ -45,7 +45,14 @@ document.addEventListener('fullscreenchange', render);
 if (!state.profile || state.weights.length === 0) {
   showQuestionnaire(state.profile || undefined);
 } else {
-  render();
+  if (state.profile.password) {
+    locked = true;
+    render();
+    showPasswordPrompt(() => { render(); });
+  } else {
+    locked = false;
+    render();
+  }
 }
 
 if ('serviceWorker' in navigator) {
