@@ -40,24 +40,40 @@ function mostSignificantRecentAction() {
   return best;
 }
 
-function petImageSrc() {
+function currentPetActionKey() {
   if (state.lastAction && window._lastActionTime && Date.now() - window._lastActionTime < 10000) {
-    const info = actionInfo(state.lastAction);
-    if (info.image) return info.image;
+    return state.lastAction;
   }
-  const significant = mostSignificantRecentAction();
-  if (significant) {
-    const info = actionInfo(significant);
+  return mostSignificantRecentAction();
+}
+
+function petImageSrc(key) {
+  const k = key || currentPetActionKey();
+  if (k) {
+    const info = actionInfo(k);
     if (info.image) return info.image;
   }
   return 'img/pet.svg';
+}
+
+function updatePetDisplay() {
+  const img = document.querySelector('.pet-img');
+  const wrap = document.querySelector('.pet-anim-wrap');
+  const bubble = document.querySelector('.bubble');
+  if (!img) return;
+
+  const actionKey = currentPetActionKey();
+  img.src = petImageSrc(actionKey);
+  if (wrap) wrap.dataset.key = actionKey || 'default';
+  if (bubble) bubble.textContent = getMessage(actionKey);
 }
 
 function petView() {
   const p = state.profile;
   const ideal = calcIdealWeight();
   const prog = calcProgress();
-  const msg = getMessage();
+  const petActionKey = currentPetActionKey();
+  const msg = getMessage(petActionKey);
 
   const bubble = el('div', { class: 'bubble' }, msg);
 
@@ -97,12 +113,11 @@ function petView() {
     ? el('div', { class: 'stat-bar' }, ...statItems)
     : null;
 
-  const imgSrc = petImageSrc();
-  const lastKey = state.lastAction || 'default';
+  const imgSrc = petImageSrc(petActionKey);
 
   return el('div', { class: 'view pet-view' },
     el('div', { class: 'pet-area' },
-      el('div', { class: 'pet-anim-wrap', 'data-key': lastKey },
+      el('div', { class: 'pet-anim-wrap', 'data-key': petActionKey || 'default' },
         el('img', {
           class: 'pet-img',
           src: imgSrc,

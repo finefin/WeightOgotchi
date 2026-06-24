@@ -229,7 +229,7 @@ function logAction(key) {
   }
   save();
   clearTimeout(_reactionTimer);
-  _reactionTimer = setTimeout(() => { if (typeof render === 'function') render(); }, 10000);
+  _reactionTimer = setTimeout(() => { if (typeof updatePetDisplay === 'function') updatePetDisplay(); }, 10000);
 }
 
 function adjustHappinessForWeight() {

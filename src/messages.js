@@ -30,7 +30,7 @@ const MESSAGES = {
   overdue: ['Overdue 1', 'Overdue 2', 'Overdue 3', 'Overdue 4', 'Overdue 5'],
 };
 
-function getMessage() {
+function getMessage(actionKey) {
   if (!state.profile) return MESSAGES.welcome[0];
 
   if (state.weights.length === 0) {
@@ -53,8 +53,8 @@ function getMessage() {
     return MESSAGES.overdue[Math.floor(Math.random() * MESSAGES.overdue.length)];
   }
 
-  if (state.lastAction && ACTIVITY_MESSAGES[state.lastAction]) {
-    const msgs = ACTIVITY_MESSAGES[state.lastAction];
+  if (actionKey && ACTIVITY_MESSAGES[actionKey]) {
+    const msgs = ACTIVITY_MESSAGES[actionKey];
     return msgs[Math.floor(Math.random() * msgs.length)];
   }
 
