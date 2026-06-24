@@ -60,7 +60,7 @@ if ('serviceWorker' in navigator) {
     function checkUpdate() { reg.update(); }
     document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
     setInterval(checkUpdate, 60 * 60 * 1000);
-  });
+  }).catch(() => {});
 
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
