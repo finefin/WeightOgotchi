@@ -135,7 +135,7 @@ function petView() {
       el('div', { class: 'happiness-track' },
         el('div', {
           class: 'happiness-fill',
-          style: { width: `${((state.happiness + 1) / 2) * 100}%` },
+          style: { width: `${((calcHappiness() + 1) / 2) * 100}%` },
         }),
       ),
       el('div', { class: 'happiness-label' }, '😊'),
@@ -287,7 +287,6 @@ function devAddWeight() {
   d.setDate(d.getDate() + 1);
   const date = d.toISOString().slice(0, 10);
   state.weights.push({ weight: Math.round((current + delta) * 10) / 10, date });
-  adjustHappinessForWeight();
   save();
   render();
 }
@@ -304,7 +303,6 @@ function devClear() {
   state.activities = [];
   state.stats = {};
   state.lastAction = null;
-  state.happiness = 0;
   save();
   render();
 }

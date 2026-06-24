@@ -78,7 +78,6 @@ function showWeightDialog() {
     const w = parseFloat(input.value);
     if (!w) return;
     state.weights.push({ weight: w, date: today });
-    adjustHappinessForWeight();
     save();
     overlay.remove();
     render();
@@ -109,7 +108,6 @@ function showEditDialog(entry, idx) {
     const w = parseFloat(input.value);
     if (!w) return;
     state.weights[idx].weight = w;
-    adjustHappinessForWeight();
     save();
     overlay.remove();
     render();
@@ -218,30 +216,36 @@ const ACTION_DEFS = [
 
 let _reactionTimer = null;
 
+function calcHappiness() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTs = Date.parse(today);
+  const happinessMap = {};
+  for (const def of ACTION_DEFS) {
+    if (def.submenu) {
+      for (const sub of def.submenu) {
+        happinessMap[sub.key] = sub.happiness || 0;
+      }
+    } else {
+      happinessMap[def.key] = def.happiness || 0;
+    }
+  }
+  let total = 0;
+  for (const a of state.activities) {
+    const daysAgo = (todayTs - Date.parse(a.date)) / 86400000;
+    if (daysAgo < 0) continue;
+    total += (happinessMap[a.action] || 0) * Math.pow(0.85, daysAgo);
+  }
+  return Math.max(-1, Math.min(1, total));
+}
+
 function logAction(key) {
   state.stats[key] = (state.stats[key] || 0) + 1;
   state.activities.push({ action: key, date: new Date().toISOString().slice(0, 10) });
   state.lastAction = key;
   window._lastActionTime = Date.now();
-  const def = ALL_ACTION_DEFS.find(a => a.key === key);
-  if (def && def.happiness) {
-    state.happiness = Math.max(-1, Math.min(1, state.happiness + def.happiness));
-  }
   save();
   clearTimeout(_reactionTimer);
   _reactionTimer = setTimeout(() => { if (typeof updatePetDisplay === 'function') updatePetDisplay(); }, 10000);
-}
-
-function adjustHappinessForWeight() {
-  const p = state.profile;
-  if (!p || state.weights.length < 2) return;
-  const sorted = [...state.weights].sort((a, b) => a.date.localeCompare(b.date));
-  const prev = sorted[sorted.length - 2].weight;
-  const current = sorted[sorted.length - 1].weight;
-  const target = p.targetWeight;
-  if (Math.abs(current - target) < Math.abs(prev - target)) {
-    state.happiness = Math.min(1, state.happiness + 0.08);
-  }
 }
 
 function showRadialMenu(options, backFn) {
@@ -352,7 +356,7 @@ function showPasswordPrompt(callback) {
 
 function showStatsDialog() {
   const overlay = el('div', { class: 'overlay', onclick: (e) => { if (e.target === overlay) overlay.remove(); } });
-  const currentHappiness = state.happiness ?? 0;
+  const currentHappiness = calcHappiness();
 
   const happinessLabel = (key) => {
     const h = actionHappiness(key);
